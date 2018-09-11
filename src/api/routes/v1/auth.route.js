@@ -36,6 +36,24 @@ const router = express.Router();
  * @apiSuccess (Created 201) {String}  user.role       User's role
  * @apiSuccess (Created 201) {Date}    user.createdAt  Timestamp
  *
+ * @apiSuccessExample {json} json Success-Response:
+ *    HTTP/1.1 201 Created
+ *    {
+ *      "token": {
+ *          "tokenType": "Bearer",
+ *          "accessToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1MzY2ODAzNzgsImlhdCI6MTUzNjY3OTQ3OCwic3ViIjoiNWI5N2RlMzY5ZjcxODU0YWFjYWU1ZTdmIn0.iXvbNkLPl6AQmlk6amELJeBKeBj94wynHtFg2nJN_0Y",
+ *          "refreshToken": "5b97de369f71854aacae5e7f.29fbaf3d1128ce09e6ec176fd1f530b5d15f32c4eb8fe2a9241ad8f120ef82657c99398bdcf9a6e2",
+ *          "expiresIn": "2018-09-11T15:39:38.240Z"
+ *      },
+ *      "user": {
+ *          "id": "5b97de369f71854aacae5e7f",
+ *          "name": "John Doe",
+ *          "email": "johndoe@email.com",
+ *          "role": "user",
+ *          "createdAt": "2018-09-11T15:24:38.025Z"
+ *      }
+ *    }
+ *
  * @apiError (Bad Request 400)  ValidationError  Some parameters may contain invalid values
  */
 router.route('/register').post(validate(register), controller.register);

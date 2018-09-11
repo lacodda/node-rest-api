@@ -40,6 +40,7 @@
     "validate": "yarn lint && yarn test",
     "postpublish": "git push --tags",
     "deploy": "sh ./deploy.sh",
+    "docs": "apidoc -i src -o docs",
     "generate-ssl": "node ./scripts/generate-ssl --hostname localhost",
     "add-generated-ssl": "open /Applications/Utilities/Keychain\\ Access.app ssl/ssl.crt"
   },
