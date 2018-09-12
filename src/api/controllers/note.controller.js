@@ -30,6 +30,7 @@ exports.get = (req, res) => res.json(req.locals.note.transform());
 exports.create = async (req, res, next) => {
   try {
     const note = new Note(req.body);
+    note.userId = req.user._id;
     const savedNote = await note.save();
     res.status(httpStatus.CREATED);
     res.json(savedNote.transform());
@@ -80,7 +81,9 @@ exports.update = (req, res, next) => {
  */
 exports.list = async (req, res, next) => {
   try {
-    const notes = await Note.list(req.query);
+    // console.log('QUERY', req.query);
+    const query = { ...req.query, userId: req.user._id };
+    const notes = await Note.list(query);
     const transformedNotes = notes.map(note => note.transform());
     res.json(transformedNotes);
   } catch (error) {

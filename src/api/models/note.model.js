@@ -8,6 +8,7 @@ const uuidv4 = require('uuid/v4');
 const APIError = require('../utils/APIError');
 const { env, jwtSecret, jwtExpirationInterval } = require('../../config/vars');
 
+const { Schema, Types } = mongoose;
 /**
  * Note Roles
  */
@@ -17,8 +18,9 @@ const type = ['note', 'link'];
  * Note Schema
  * @private
  */
-const noteSchema = new mongoose.Schema(
+const noteSchema = new Schema(
   {
+    userId: Schema.Types.ObjectId,
     name: {
       type: String,
       maxlength: 255,
@@ -74,7 +76,7 @@ noteSchema.statics = {
     try {
       let note;
 
-      if (mongoose.Types.ObjectId.isValid(id)) {
+      if (Types.ObjectId.isValid(id)) {
         note = await this.findById(id).exec();
       }
       if (note) {
@@ -97,8 +99,8 @@ noteSchema.statics = {
    * @param {number} limit - Limit number of notes to be returned.
    * @returns {Promise<Note[]>}
    */
-  list({ page = 1, perPage = 30, name, email, role }) {
-    const options = omitBy({ name, email, role }, isNil);
+  list({ page = 1, perPage = 5, userId }) {
+    const options = omitBy({ userId }, isNil);
 
     return this.find(options)
       .sort({ createdAt: -1 })
