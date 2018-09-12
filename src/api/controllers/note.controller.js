@@ -30,13 +30,12 @@ exports.get = (req, res) => res.json(req.locals.note.transform());
 exports.create = async (req, res, next) => {
   try {
     const note = new Note(req.body);
-    console.log('NOTE', note, req.body);
-    
     const savedNote = await note.save();
     res.status(httpStatus.CREATED);
     res.json(savedNote.transform());
   } catch (error) {
-    next(Note.checkDuplicateEmail(error));
+    next(error);
+    // next(Note.checkDuplicateEmail(error));
   }
 };
 

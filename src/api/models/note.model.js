@@ -43,6 +43,22 @@ const noteSchema = new mongoose.Schema(
 );
 
 /**
+ * Methods
+ */
+noteSchema.method({
+  transform() {
+    const transformed = {};
+    const fields = ['id', 'name', 'type', 'content', 'createdAt'];
+
+    fields.forEach(field => {
+      transformed[field] = this[field];
+    });
+
+    return transformed;
+  },
+});
+
+/**
  * Statics
  */
 noteSchema.statics = {

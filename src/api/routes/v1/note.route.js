@@ -1,20 +1,20 @@
 const express = require('express');
 const validate = require('express-validation');
 const controller = require('../../controllers/note.controller');
-const { authorize, ADMIN, LOGGED_USER } = require('../../middlewares/auth');
-const {
-  listNotes,
-  createUser,
-  replaceUser,
-  updateUser,
-} = require('../../validations/user.validation');
+// const { authorize, ADMIN, LOGGED_USER } = require('../../middlewares/auth');
+// const {
+//   listNotes,
+//   createNote,
+//   replaceNote,
+//   updateNote,
+// } = require('../../validations/note.validation');
 
 const router = express.Router();
 
 /**
- * Load user when API with userId route parameter is hit
+ * Load note when API with noteId route parameter is hit
  */
-router.param('userId', controller.load);
+// router.param('noteId', controller.load);
 
 router
   .route('/')
@@ -23,16 +23,16 @@ router
    * @apiDescription Get a list of notes
    * @apiVersion 1.0.0
    * @apiName ListNotes
-   * @apiGroup User
+   * @apiGroup Note
    * @apiPermission admin
    *
-   * @apiHeader {String} Athorization  User's access token
+   * @apiHeader {String} Athorization  Note's access token
    *
    * @apiParam  {Number{1-}}         [page=1]     List page
    * @apiParam  {Number{1-100}}      [perPage=1]  Notes per page
-   * @apiParam  {String}             [name]       User's name
-   * @apiParam  {String}             [email]      User's email
-   * @apiParam  {String=user,admin}  [role]       User's role
+   * @apiParam  {String}             [name]       Note's name
+   * @apiParam  {String}             [email]      Note's email
+   * @apiParam  {String=note,admin}  [role]       Note's role
    *
    * @apiSuccess {Object[]} notes List of notes.
    *
@@ -41,24 +41,24 @@ router
    */
   // .get(authorize(ADMIN), validate(listNotes), controller.list)
   /**
-   * @api {post} v1/notes Create User
-   * @apiDescription Create a new user
+   * @api {post} v1/notes Create Note
+   * @apiDescription Create a new note
    * @apiVersion 1.0.0
-   * @apiName CreateUser
-   * @apiGroup User
+   * @apiName CreateNote
+   * @apiGroup Note
    * @apiPermission admin
    *
-   * @apiHeader {String} Athorization  User's access token
+   * @apiHeader {String} Athorization  Note's access token
    *
-   * @apiParam  {String}             email     User's email
-   * @apiParam  {String{6..128}}     password  User's password
-   * @apiParam  {String{..128}}      [name]    User's name
-   * @apiParam  {String=user,admin}  [role]    User's role
+   * @apiParam  {String}             email     Note's email
+   * @apiParam  {String{6..128}}     password  Note's password
+   * @apiParam  {String{..128}}      [name]    Note's name
+   * @apiParam  {String=note,admin}  [role]    Note's role
    *
-   * @apiSuccess (Created 201) {String}  id         User's id
-   * @apiSuccess (Created 201) {String}  name       User's name
-   * @apiSuccess (Created 201) {String}  email      User's email
-   * @apiSuccess (Created 201) {String}  role       User's role
+   * @apiSuccess (Created 201) {String}  id         Note's id
+   * @apiSuccess (Created 201) {String}  name       Note's name
+   * @apiSuccess (Created 201) {String}  email      Note's email
+   * @apiSuccess (Created 201) {String}  role       Note's role
    * @apiSuccess (Created 201) {Date}    createdAt  Timestamp
    *
    * @apiError (Bad Request 400)   ValidationError  Some parameters may contain invalid values
@@ -66,3 +66,6 @@ router
    * @apiError (Forbidden 403)     Forbidden        Only admins can create the data
    */
   .post(controller.create);
+  //.post(authorize(ADMIN), validate(createNote), controller.create);
+
+module.exports = router;

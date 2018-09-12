@@ -67,3 +67,6 @@ lib-cov/
 
 # SSL
 ssl/
+
+#ApiDoc
+apidoc/
