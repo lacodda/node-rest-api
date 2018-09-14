@@ -5,6 +5,7 @@ const APIError = require('../utils/APIError');
 
 const ADMIN = 'admin';
 const LOGGED_USER = '_loggedUser';
+const LOGGED = '_logged';
 
 const handleJWT = (req, res, next, roles) => async (err, user, info) => {
   const error = err || info;
@@ -22,7 +23,13 @@ const handleJWT = (req, res, next, roles) => async (err, user, info) => {
     return next(apiError);
   }
 
-  if (roles === LOGGED_USER) {
+  if (roles === LOGGED) {
+    if (user.role !== 'admin' && user.role !== 'user') {
+      apiError.status = httpStatus.FORBIDDEN;
+      apiError.message = 'Forbidden';
+      return next(apiError);
+    }
+  } else if (roles === LOGGED_USER) {
     if (user.role !== 'admin' && req.params.userId !== user._id.toString()) {
       apiError.status = httpStatus.FORBIDDEN;
       apiError.message = 'Forbidden';

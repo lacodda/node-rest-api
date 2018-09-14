@@ -1,7 +1,7 @@
 const express = require('express');
 const validate = require('express-validation');
 const controller = require('../../controllers/note.controller');
-const { authorize, ADMIN, LOGGED_USER } = require('../../middlewares/auth');
+const { authorize, ADMIN, LOGGED_USER, LOGGED } = require('../../middlewares/auth');
 // const {
 //   listNotes,
 //   createNote,
@@ -40,7 +40,7 @@ router
    * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
    */
   // .get(authorize(ADMIN), validate(listNotes), controller.list); TODO: validation
-  .get(authorize(LOGGED_USER), controller.list)
+  .get(authorize(LOGGED), controller.list)
   /**
    * @api {post} v1/notes Create Note
    * @apiDescription Create a new note
@@ -67,6 +67,6 @@ router
    * @apiError (Forbidden 403)     Forbidden        Only admins can create the data
    */
   // .post(authorize(ADMIN), validate(createNote), controller.create); TODO: validation
-  .post(authorize(LOGGED_USER), controller.create);
+  .post((authorize(LOGGED)), controller.create);
 
 module.exports = router;
