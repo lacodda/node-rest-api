@@ -1,10 +1,10 @@
 {
-  "name": "project-alpha",
+  "name": "node-rest-api",
   "version": "0.0.1",
-  "description": "project alpha",
+  "description": "node rest api",
   "license": "MIT",
   "main": "src/index.js",
-  "homepage": "https://github.com/lacodda/project-alpha",
+  "homepage": "https://github.com/lacodda/node-rest-api",
   "author": {
     "name": "Kirill Lahtachev",
     "email": "lahtachev@gmail.com",
@@ -12,10 +12,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:lacodda/project-alpha.git"
+    "url": "git@github.com:lacodda/node-rest-api.git"
   },
   "bugs": {
-    "url": "https://github.com/lacodda/project-alpha/issues"
+    "url": "https://github.com/lacodda/node-rest-api/issues"
   },
   "keywords": [
     "node",
