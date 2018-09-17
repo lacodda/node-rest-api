@@ -23,7 +23,7 @@ const noteSchema = new Schema(
     userId: Schema.Types.ObjectId,
     name: {
       type: String,
-      maxlength: 255,
+      maxlength: 256,
       index: true,
       trim: true,
     },
