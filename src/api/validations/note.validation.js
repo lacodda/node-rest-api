@@ -24,7 +24,7 @@ module.exports = {
     },
   },
 
-  // PUT /v1/notes/:noteId
+  // PUT /v1/notes/:id
   replaceNote: {
     body: {
       content: Joi.string().required(),
@@ -32,13 +32,13 @@ module.exports = {
       type: Joi.string().valid(Note.type),
     },
     params: {
-      noteId: Joi.string()
+      id: Joi.string()
         .regex(/^[a-fA-F0-9]{24}$/)
         .required(),
     },
   },
 
-  // PATCH /v1/notes/:noteId
+  // PATCH /v1/notes/:id
   updateNote: {
     body: {
       content: Joi.string(),
@@ -46,7 +46,7 @@ module.exports = {
       type: Joi.string().valid(Note.type),
     },
     params: {
-      noteId: Joi.string()
+      id: Joi.string()
         .regex(/^[a-fA-F0-9]{24}$/)
         .required(),
     },

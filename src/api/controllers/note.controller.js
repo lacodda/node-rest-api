@@ -2,6 +2,7 @@ const httpStatus = require('http-status');
 const { omit } = require('lodash');
 const Note = require('../models/note.model');
 const { handler: errorHandler } = require('../middlewares/error');
+const APIError = require('../utils/APIError');
 
 /**
  * Load note and append to req.
@@ -56,7 +57,8 @@ exports.replace = async (req, res, next) => {
 
     res.json(savedNote.transform());
   } catch (error) {
-    next(Note.checkDuplicateEmail(error));
+    next(error);
+    // next(Note.checkDuplicateEmail(error));
   }
 };
 
@@ -64,15 +66,23 @@ exports.replace = async (req, res, next) => {
  * Update existing note
  * @public
  */
-exports.update = (req, res, next) => {
-  const ommitRole = req.locals.note.role !== 'admin' ? 'role' : '';
-  const updatedNote = omit(req.body, ommitRole);
-  const note = Object.assign(req.locals.note, updatedNote);
+exports.update = async (req, res, next) => {
+  try {
+    const note = await Note.findById(req.params.id);
 
-  note
-    .save()
-    .then(savedNote => res.json(savedNote.transform()))
-    .catch(e => next(Note.checkDuplicateEmail(e)));
+    if (!note || !note.userId.equals(req.user._id)) {
+      throw new APIError({
+        status: httpStatus.NOT_FOUND,
+      });
+    }
+    note.setFromObject(req.body);
+    const updatedNote = await note.save();
+
+    res.json(updatedNote.transform());
+  } catch (error) {
+    next(error);
+    // next(Note.checkDuplicateEmail(error));
+  }
 };
 
 /**
@@ -81,7 +91,6 @@ exports.update = (req, res, next) => {
  */
 exports.list = async (req, res, next) => {
   try {
-    // console.log('QUERY', req.query);
     const query = { ...req.query, userId: req.user._id };
     const notes = await Note.list(query);
     const transformedNotes = notes.map(note => note.transform());

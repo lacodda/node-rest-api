@@ -67,7 +67,7 @@ router
   .post(authorize(LOGGED), validate(createNote), controller.create);
 
 router
-  .route('/:noteId')
+  .route('/:id')
   /**
    * @api {get} v1/notes/:id Get Note
    * @apiDescription Get note information
