@@ -7,6 +7,12 @@ const APIError = require('../utils/APIError');
 /**
  * Load note and append to req.
  * @public
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ * @param {*} id
+ * @returns
  */
 exports.load = async (req, res, next, id) => {
   try {
@@ -21,12 +27,19 @@ exports.load = async (req, res, next, id) => {
 /**
  * Get note
  * @public
+ *
+ * @param {*} req
+ * @param {*} res
  */
 exports.get = (req, res) => res.json(req.locals.note.transform());
 
 /**
  * Create new note
  * @public
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
  */
 exports.create = async (req, res, next) => {
   try {
@@ -44,6 +57,10 @@ exports.create = async (req, res, next) => {
 /**
  * Replace existing note
  * @public
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
  */
 exports.replace = async (req, res, next) => {
   try {
@@ -65,6 +82,10 @@ exports.replace = async (req, res, next) => {
 /**
  * Update existing note
  * @public
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
  */
 exports.update = async (req, res, next) => {
   try {
@@ -88,6 +109,10 @@ exports.update = async (req, res, next) => {
 /**
  * Get note list
  * @public
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
  */
 exports.list = async (req, res, next) => {
   try {
@@ -103,6 +128,10 @@ exports.list = async (req, res, next) => {
 /**
  * Delete note
  * @public
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
  */
 exports.remove = (req, res, next) => {
   const { note } = req.locals;
