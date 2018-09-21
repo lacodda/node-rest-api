@@ -5,42 +5,39 @@ const httpStatus = require('http-status');
 const { expect } = require('chai');
 // const sinon = require('sinon');
 const bcrypt = require('bcryptjs');
-// const { some, omitBy, isNil } = require('lodash');
+const { some, omitBy, isNil } = require('lodash');
 const app = require('../../../index');
 const User = require('../../models/user.model');
-// const Note = require('../../models/note.model');
+const Note = require('../../models/note.model');
 // const JWT_EXPIRATION = require('../../../config/vars').jwtExpirationInterval;
-
 
 /**
  * root level hooks
  */
 
-// async function format(note) {
-//   const formated = note;
+async function format(note) {
+  const formated = note;
 
-//   // delete password
-//   delete formated.password;
+  // delete password
+  delete formated.password;
 
-//   // get notes from database
-//   const dbNote = (await Note.findOne({ content: note.content })).transform();
+  // get notes from database
+  const dbNote = (await Note.findOne({ content: note.content })).transform();
 
-//   // remove null and undefined properties
-//   return omitBy(dbNote, isNil);
-// }
+  // remove null and undefined properties
+  return omitBy(dbNote, isNil);
+}
 
-describe('Notes API', async () => {
+describe('Notes API', () => {
   let adminAccessToken;
-  // let userAccessToken;
+  let userAccessToken;
   let dbUsers;
-  // let user;
-  // let admin;
   let note;
 
-  const password = '123456';
-  const passwordHashed = await bcrypt.hash(password, 1);
-
   beforeEach(async () => {
+    const password = '123456';
+    const passwordHashed = await bcrypt.hash(password, 1);
+
     dbUsers = {
       branStark: {
         email: 'branstark@gmail.com',
@@ -58,23 +55,11 @@ describe('Notes API', async () => {
     note = {
       name: 'New note',
       content: 'New note content',
-      // type: 'note',
+      type: 'note',
     };
 
-    // user = {
-    //   email: 'sousa.dfs@gmail.com',
-    //   password,
-    //   name: 'Daniel Sousa',
-    // };
-
-    // admin = {
-    //   email: 'sousa.dfs@gmail.com',
-    //   password,
-    //   name: 'Daniel Sousa',
-    //   role: 'admin',
-    // };
-
     await User.remove({});
+    await Note.remove({});
     await User.insertMany([dbUsers.branStark, dbUsers.jonSnow]);
 
     dbUsers.branStark.password = password;
@@ -82,8 +67,8 @@ describe('Notes API', async () => {
 
     adminAccessToken = (await User.findAndGenerateToken(dbUsers.branStark))
       .accessToken;
-    // userAccessToken = (await User.findAndGenerateToken(dbUsers.jonSnow))
-    //   .accessToken;
+    userAccessToken = (await User.findAndGenerateToken(dbUsers.jonSnow))
+      .accessToken;
   });
 
   describe('POST /v1/notes', () => {
@@ -98,16 +83,16 @@ describe('Notes API', async () => {
         });
     });
 
-    // it('should create a new note and set default role to "user"', () => {
-    //   return request(app)
-    //     .post('/v1/notes')
-    //     .set('Authorization', `Bearer ${adminAccessToken}`)
-    //     .send(note)
-    //     .expect(httpStatus.CREATED)
-    //     .then(res => {
-    //       expect(res.body.role).to.be.equal('user');
-    //     });
-    // });
+    it('should create a new note and set default type to "note"', () => {
+      return request(app)
+        .post('/v1/notes')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send(note)
+        .expect(httpStatus.CREATED)
+        .then(res => {
+          expect(res.body.type).to.be.equal('note');
+        });
+    });
 
     // it('should report error when email already exists', () => {
     //   user.email = dbUsers.branStark.email;
