@@ -16,11 +16,6 @@ const Note = require('../../models/note.model');
  */
 
 async function format(note) {
-  const formated = note;
-
-  // delete password
-  delete formated.password;
-
   // get notes from database
   const dbNote = (await Note.findOne({ content: note.content })).transform();
 
@@ -32,6 +27,7 @@ describe('Notes API', () => {
   let adminAccessToken;
   let userAccessToken;
   let dbUsers;
+  let dbNotes;
   let note;
 
   beforeEach(async () => {
@@ -52,6 +48,19 @@ describe('Notes API', () => {
       },
     };
 
+    dbNotes = {
+      firstNote: {
+        name: 'First note',
+        content: 'First note content',
+        type: 'note',
+      },
+      secondNote: {
+        name: 'Second note',
+        content: 'Second note content',
+        type: 'link',
+      },
+    };
+
     note = {
       name: 'New note',
       content: 'New note content',
@@ -59,8 +68,14 @@ describe('Notes API', () => {
     };
 
     await User.remove({});
-    await Note.remove({});
     await User.insertMany([dbUsers.branStark, dbUsers.jonSnow]);
+
+    await Note.remove({});
+    const userId = (await User.findOne({}))._id;
+    await Note.insertMany([
+      { ...dbNotes.firstNote, userId },
+      { ...dbNotes.secondNote, userId },
+    ]);
 
     dbUsers.branStark.password = password;
     dbUsers.jonSnow.password = password;
@@ -94,67 +109,121 @@ describe('Notes API', () => {
         });
     });
 
-    // it('should report error when email already exists', () => {
-    //   user.email = dbUsers.branStark.email;
+    it('should report error when create note without content', () => {
+      delete note.content;
 
+      return request(app)
+        .post('/v1/notes')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send(note)
+        .expect(httpStatus.BAD_REQUEST)
+        .then(res => {
+          const { field } = res.body.errors[0];
+          const { location } = res.body.errors[0];
+          const { messages } = res.body.errors[0];
+          expect(field).to.be.equal('content');
+          expect(location).to.be.equal('body');
+          expect(messages).to.include('"content" is required');
+        });
+    });
+
+    // TODO: max name <= 256
+    // TODO: user can create notes (userAccessToken)
+  });
+
+  describe('GET /v1/notes', () => {
+    it('should get all notes created by admin', () => {
+      return request(app)
+        .get('/v1/notes')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .expect(httpStatus.OK)
+        .then(async res => {
+          const firstNote = format(dbNotes.firstNote);
+          const secondNote = format(dbNotes.secondNote);
+
+          const includesFirstNote = some(res.body, firstNote);
+          const includesSecondNote = some(res.body, secondNote);
+
+          // before comparing it is necessary to convert String to Date
+          res.body[0].createdAt = new Date(res.body[0].createdAt);
+          res.body[1].createdAt = new Date(res.body[1].createdAt);
+
+          expect(res.body).to.be.an('array');
+          expect(res.body).to.have.lengthOf(2);
+          expect(includesFirstNote).to.be.true;
+          expect(includesSecondNote).to.be.true;
+        });
+    });
+
+    // it('should get all users with pagination', () => {
     //   return request(app)
-    //     .post('/v1/users')
+    //     .get('/v1/notes')
     //     .set('Authorization', `Bearer ${adminAccessToken}`)
-    //     .send(user)
-    //     .expect(httpStatus.CONFLICT)
+    //     .query({ page: 2, perPage: 1 })
+    //     .expect(httpStatus.OK)
     //     .then(res => {
-    //       const { field } = res.body.errors[0];
-    //       const { location } = res.body.errors[0];
-    //       const { messages } = res.body.errors[0];
-    //       expect(field).to.be.equal('email');
-    //       expect(location).to.be.equal('body');
-    //       expect(messages).to.include('"email" already exists');
+    //       delete dbUsers.jonSnow.password;
+    //       const john = format(dbUsers.jonSnow);
+    //       const includesjonSnow = some(res.body, john);
+
+    //       // before comparing it is necessary to convert String to Date
+    //       res.body[0].createdAt = new Date(res.body[0].createdAt);
+
+    //       expect(res.body).to.be.an('array');
+    //       expect(res.body).to.have.lengthOf(1);
+    //       expect(includesjonSnow).to.be.true;
     //     });
     // });
 
-    // it('should report error when email is not provided', () => {
-    //   delete user.email;
-
+    // it('should filter users', () => {
     //   return request(app)
-    //     .post('/v1/users')
+    //     .get('/v1/notes')
     //     .set('Authorization', `Bearer ${adminAccessToken}`)
-    //     .send(user)
+    //     .query({ email: dbUsers.jonSnow.email })
+    //     .expect(httpStatus.OK)
+    //     .then(res => {
+    //       delete dbUsers.jonSnow.password;
+    //       const john = format(dbUsers.jonSnow);
+    //       const includesjonSnow = some(res.body, john);
+
+    //       // before comparing it is necessary to convert String to Date
+    //       res.body[0].createdAt = new Date(res.body[0].createdAt);
+
+    //       expect(res.body).to.be.an('array');
+    //       expect(res.body).to.have.lengthOf(1);
+    //       expect(includesjonSnow).to.be.true;
+    //     });
+    // });
+
+    // it("should report error when pagination's parameters are not a number", () => {
+    //   return request(app)
+    //     .get('/v1/notes')
+    //     .set('Authorization', `Bearer ${adminAccessToken}`)
+    //     .query({ page: '?', perPage: 'whaat' })
     //     .expect(httpStatus.BAD_REQUEST)
     //     .then(res => {
     //       const { field } = res.body.errors[0];
     //       const { location } = res.body.errors[0];
     //       const { messages } = res.body.errors[0];
-    //       expect(field).to.be.equal('email');
-    //       expect(location).to.be.equal('body');
-    //       expect(messages).to.include('"email" is required');
-    //     });
-    // });
-
-    // it('should report error when password length is less than 6', () => {
-    //   user.password = '12345';
-
-    //   return request(app)
-    //     .post('/v1/users')
-    //     .set('Authorization', `Bearer ${adminAccessToken}`)
-    //     .send(user)
-    //     .expect(httpStatus.BAD_REQUEST)
+    //       expect(field).to.be.equal('page');
+    //       expect(location).to.be.equal('query');
+    //       expect(messages).to.include('"page" must be a number');
+    //       return Promise.resolve(res);
+    //     })
     //     .then(res => {
-    //       const { field } = res.body.errors[0];
-    //       const { location } = res.body.errors[0];
-    //       const { messages } = res.body.errors[0];
-    //       expect(field).to.be.equal('password');
-    //       expect(location).to.be.equal('body');
-    //       expect(messages).to.include(
-    //         '"password" length must be at least 6 characters long',
-    //       );
+    //       const { field } = res.body.errors[1];
+    //       const { location } = res.body.errors[1];
+    //       const { messages } = res.body.errors[1];
+    //       expect(field).to.be.equal('perPage');
+    //       expect(location).to.be.equal('query');
+    //       expect(messages).to.include('"perPage" must be a number');
     //     });
     // });
 
-    // it('should report error when logged user is not an admin', () => {
+    // it('should report error if logged user is not an admin', () => {
     //   return request(app)
-    //     .post('/v1/users')
+    //     .get('/v1/notes')
     //     .set('Authorization', `Bearer ${userAccessToken}`)
-    //     .send(user)
     //     .expect(httpStatus.FORBIDDEN)
     //     .then(res => {
     //       expect(res.body.code).to.be.equal(httpStatus.FORBIDDEN);
@@ -163,114 +232,13 @@ describe('Notes API', () => {
     // });
   });
 
-  /*   describe('GET /v1/users', () => {
-    it('should get all users', () => {
-      return request(app)
-        .get('/v1/users')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .expect(httpStatus.OK)
-        .then(async res => {
-          const bran = format(dbUsers.branStark);
-          const john = format(dbUsers.jonSnow);
-
-          const includesBranStark = some(res.body, bran);
-          const includesjonSnow = some(res.body, john);
-
-          // before comparing it is necessary to convert String to Date
-          res.body[0].createdAt = new Date(res.body[0].createdAt);
-          res.body[1].createdAt = new Date(res.body[1].createdAt);
-
-          expect(res.body).to.be.an('array');
-          expect(res.body).to.have.lengthOf(2);
-          expect(includesBranStark).to.be.true;
-          expect(includesjonSnow).to.be.true;
-        });
-    });
-
-    it('should get all users with pagination', () => {
-      return request(app)
-        .get('/v1/users')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .query({ page: 2, perPage: 1 })
-        .expect(httpStatus.OK)
-        .then(res => {
-          delete dbUsers.jonSnow.password;
-          const john = format(dbUsers.jonSnow);
-          const includesjonSnow = some(res.body, john);
-
-          // before comparing it is necessary to convert String to Date
-          res.body[0].createdAt = new Date(res.body[0].createdAt);
-
-          expect(res.body).to.be.an('array');
-          expect(res.body).to.have.lengthOf(1);
-          expect(includesjonSnow).to.be.true;
-        });
-    });
-
-    it('should filter users', () => {
-      return request(app)
-        .get('/v1/users')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .query({ email: dbUsers.jonSnow.email })
-        .expect(httpStatus.OK)
-        .then(res => {
-          delete dbUsers.jonSnow.password;
-          const john = format(dbUsers.jonSnow);
-          const includesjonSnow = some(res.body, john);
-
-          // before comparing it is necessary to convert String to Date
-          res.body[0].createdAt = new Date(res.body[0].createdAt);
-
-          expect(res.body).to.be.an('array');
-          expect(res.body).to.have.lengthOf(1);
-          expect(includesjonSnow).to.be.true;
-        });
-    });
-
-    it("should report error when pagination's parameters are not a number", () => {
-      return request(app)
-        .get('/v1/users')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .query({ page: '?', perPage: 'whaat' })
-        .expect(httpStatus.BAD_REQUEST)
-        .then(res => {
-          const { field } = res.body.errors[0];
-          const { location } = res.body.errors[0];
-          const { messages } = res.body.errors[0];
-          expect(field).to.be.equal('page');
-          expect(location).to.be.equal('query');
-          expect(messages).to.include('"page" must be a number');
-          return Promise.resolve(res);
-        })
-        .then(res => {
-          const { field } = res.body.errors[1];
-          const { location } = res.body.errors[1];
-          const { messages } = res.body.errors[1];
-          expect(field).to.be.equal('perPage');
-          expect(location).to.be.equal('query');
-          expect(messages).to.include('"perPage" must be a number');
-        });
-    });
-
-    it('should report error if logged user is not an admin', () => {
-      return request(app)
-        .get('/v1/users')
-        .set('Authorization', `Bearer ${userAccessToken}`)
-        .expect(httpStatus.FORBIDDEN)
-        .then(res => {
-          expect(res.body.code).to.be.equal(httpStatus.FORBIDDEN);
-          expect(res.body.message).to.be.equal('Forbidden');
-        });
-    });
-  }); */
-
-  /*   describe('GET /v1/users/:userId', () => {
+  /*   describe('GET /v1/notes/:userId', () => {
     it('should get user', async () => {
       const id = (await Note.findOne({}))._id;
       delete dbUsers.branStark.password;
 
       return request(app)
-        .get(`/v1/users/${id}`)
+        .get(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(httpStatus.OK)
         .then(res => {
@@ -280,7 +248,7 @@ describe('Notes API', () => {
 
     it('should report error "Note does not exist" when user does not exists', () => {
       return request(app)
-        .get('/v1/users/56c787ccc67fc16ccc1a5e92')
+        .get('/v1/notes/56c787ccc67fc16ccc1a5e92')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then(res => {
@@ -291,7 +259,7 @@ describe('Notes API', () => {
 
     it('should report error "Note does not exist" when id is not a valid ObjectID', () => {
       return request(app)
-        .get('/v1/users/palmeiras1914')
+        .get('/v1/notes/palmeiras1914')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then(res => {
@@ -304,7 +272,7 @@ describe('Notes API', () => {
       const id = (await Note.findOne({ email: dbUsers.branStark.email }))._id;
 
       return request(app)
-        .get(`/v1/users/${id}`)
+        .get(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${userAccessToken}`)
         .expect(httpStatus.FORBIDDEN)
         .then(res => {
@@ -314,15 +282,15 @@ describe('Notes API', () => {
     });
   }); */
 
-  /*   describe('PUT /v1/users/:userId', () => {
+  /*   describe('PUT /v1/notes/:userId', () => {
     it('should replace user', async () => {
       delete dbUsers.branStark.password;
       const id = (await Note.findOne(dbUsers.branStark))._id;
 
       return request(app)
-        .put(`/v1/users/${id}`)
+        .put(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(note)
         .expect(httpStatus.OK)
         .then(res => {
           delete user.password;
@@ -336,9 +304,9 @@ describe('Notes API', () => {
       delete user.email;
 
       return request(app)
-        .put(`/v1/users/${id}`)
+        .put(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(note)
         .expect(httpStatus.BAD_REQUEST)
         .then(res => {
           const { field } = res.body.errors[0];
@@ -355,9 +323,9 @@ describe('Notes API', () => {
       user.password = '12345';
 
       return request(app)
-        .put(`/v1/users/${id}`)
+        .put(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(note)
         .expect(httpStatus.BAD_REQUEST)
         .then(res => {
           const { field } = res.body.errors[0];
@@ -373,7 +341,7 @@ describe('Notes API', () => {
 
     it('should report error "Note does not exist" when user does not exists', () => {
       return request(app)
-        .put('/v1/users/palmeiras1914')
+        .put('/v1/notes/palmeiras1914')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then(res => {
@@ -386,7 +354,7 @@ describe('Notes API', () => {
       const id = (await Note.findOne({ email: dbUsers.branStark.email }))._id;
 
       return request(app)
-        .put(`/v1/users/${id}`)
+        .put(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${userAccessToken}`)
         .expect(httpStatus.FORBIDDEN)
         .then(res => {
@@ -400,7 +368,7 @@ describe('Notes API', () => {
       const role = 'admin';
 
       return request(app)
-        .put(`/v1/users/${id}`)
+        .put(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${userAccessToken}`)
         .send(admin)
         .expect(httpStatus.OK)
@@ -410,14 +378,14 @@ describe('Notes API', () => {
     });
   }); */
 
-  /*   describe('PATCH /v1/users/:userId', () => {
+  /*   describe('PATCH /v1/notes/:userId', () => {
     it('should update user', async () => {
       delete dbUsers.branStark.password;
       const id = (await Note.findOne(dbUsers.branStark))._id;
       const { name } = user;
 
       return request(app)
-        .patch(`/v1/users/${id}`)
+        .patch(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .send({ name })
         .expect(httpStatus.OK)
@@ -432,7 +400,7 @@ describe('Notes API', () => {
       const id = (await Note.findOne(dbUsers.branStark))._id;
 
       return request(app)
-        .patch(`/v1/users/${id}`)
+        .patch(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .send()
         .expect(httpStatus.OK)
@@ -443,7 +411,7 @@ describe('Notes API', () => {
 
     it('should report error "Note does not exist" when user does not exists', () => {
       return request(app)
-        .patch('/v1/users/palmeiras1914')
+        .patch('/v1/notes/palmeiras1914')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then(res => {
@@ -456,7 +424,7 @@ describe('Notes API', () => {
       const id = (await Note.findOne({ email: dbUsers.branStark.email }))._id;
 
       return request(app)
-        .patch(`/v1/users/${id}`)
+        .patch(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${userAccessToken}`)
         .expect(httpStatus.FORBIDDEN)
         .then(res => {
@@ -470,7 +438,7 @@ describe('Notes API', () => {
       const role = 'admin';
 
       return request(app)
-        .patch(`/v1/users/${id}`)
+        .patch(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${userAccessToken}`)
         .send({ role })
         .expect(httpStatus.OK)
@@ -480,15 +448,15 @@ describe('Notes API', () => {
     });
   }); */
 
-  /*   describe('DELETE /v1/users', () => {
+  /*   describe('DELETE /v1/notes', () => {
     it('should delete user', async () => {
       const id = (await Note.findOne({}))._id;
 
       return request(app)
-        .delete(`/v1/users/${id}`)
+        .delete(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NO_CONTENT)
-        .then(() => request(app).get('/v1/users'))
+        .then(() => request(app).get('/v1/notes'))
         .then(async () => {
           const users = await Note.find({});
           expect(users).to.have.lengthOf(1);
@@ -497,7 +465,7 @@ describe('Notes API', () => {
 
     it('should report error "Note does not exist" when user does not exists', () => {
       return request(app)
-        .delete('/v1/users/palmeiras1914')
+        .delete('/v1/notes/palmeiras1914')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then(res => {
@@ -510,7 +478,7 @@ describe('Notes API', () => {
       const id = (await Note.findOne({ email: dbUsers.branStark.email }))._id;
 
       return request(app)
-        .delete(`/v1/users/${id}`)
+        .delete(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${userAccessToken}`)
         .expect(httpStatus.FORBIDDEN)
         .then(res => {
@@ -520,12 +488,12 @@ describe('Notes API', () => {
     });
   }); */
 
-  /*   describe('GET /v1/users/profile', () => {
+  /*   describe('GET /v1/notes/profile', () => {
     it("should get the logged user's info", () => {
       delete dbUsers.jonSnow.password;
 
       return request(app)
-        .get('/v1/users/profile')
+        .get('/v1/notes/profile')
         .set('Authorization', `Bearer ${userAccessToken}`)
         .expect(httpStatus.OK)
         .then(res => {
@@ -544,7 +512,7 @@ describe('Notes API', () => {
       clock.tick(JWT_EXPIRATION * 60000 + 60000);
 
       return request(app)
-        .get('/v1/users/profile')
+        .get('/v1/notes/profile')
         .set('Authorization', `Bearer ${expiredAccessToken}`)
         .expect(httpStatus.UNAUTHORIZED)
         .then(res => {
