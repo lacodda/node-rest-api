@@ -98,8 +98,8 @@ noteSchema.statics = {
    * @param {number} limit - Limit number of notes to be returned.
    * @returns {Promise<Note[]>}
    */
-  list({ page = 1, perPage = 5, userId }) {
-    const options = omitBy({ userId }, isNil);
+  list({ page = 1, perPage = 5, userId, name, content, type }) {
+    const options = omitBy({ userId, name, content, type }, isNil);
 
     return this.find(options)
       .sort({ createdAt: -1 })

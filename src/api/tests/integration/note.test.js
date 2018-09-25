@@ -5,7 +5,7 @@ const httpStatus = require('http-status');
 const { expect } = require('chai');
 // const sinon = require('sinon');
 const bcrypt = require('bcryptjs');
-const { some, omitBy, isNil } = require('lodash');
+const { some, omitBy, isNil, isEqual } = require('lodash');
 const app = require('../../../index');
 const User = require('../../models/user.model');
 const Note = require('../../models/note.model');
@@ -14,7 +14,6 @@ const Note = require('../../models/note.model');
 /**
  * root level hooks
  */
-
 async function format(note) {
   // get notes from database
   const dbNote = (await Note.findOne({ content: note.content })).transform();
@@ -138,15 +137,15 @@ describe('Notes API', () => {
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(httpStatus.OK)
         .then(async res => {
-          const firstNote = format(dbNotes.firstNote);
-          const secondNote = format(dbNotes.secondNote);
-
-          const includesFirstNote = some(res.body, firstNote);
-          const includesSecondNote = some(res.body, secondNote);
+          const firstNote = await format(dbNotes.firstNote);
+          const secondNote = await format(dbNotes.secondNote);
 
           // before comparing it is necessary to convert String to Date
           res.body[0].createdAt = new Date(res.body[0].createdAt);
           res.body[1].createdAt = new Date(res.body[1].createdAt);
+
+          const includesFirstNote = some(res.body, firstNote);
+          const includesSecondNote = some(res.body, secondNote);
 
           expect(res.body).to.be.an('array');
           expect(res.body).to.have.lengthOf(2);
@@ -155,25 +154,25 @@ describe('Notes API', () => {
         });
     });
 
-    // it('should get all users with pagination', () => {
-    //   return request(app)
-    //     .get('/v1/notes')
-    //     .set('Authorization', `Bearer ${adminAccessToken}`)
-    //     .query({ page: 2, perPage: 1 })
-    //     .expect(httpStatus.OK)
-    //     .then(res => {
-    //       delete dbUsers.jonSnow.password;
-    //       const john = format(dbUsers.jonSnow);
-    //       const includesjonSnow = some(res.body, john);
+    it('should get all notes with pagination', () => {
+      return request(app)
+        .get('/v1/notes')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .query({ page: 2, perPage: 1 })
+        .expect(httpStatus.OK)
+        .then(async res => {
+          const secondNote = await format(dbNotes.secondNote);
 
-    //       // before comparing it is necessary to convert String to Date
-    //       res.body[0].createdAt = new Date(res.body[0].createdAt);
+          // before comparing it is necessary to convert String to Date
+          res.body[0].createdAt = new Date(res.body[0].createdAt);
 
-    //       expect(res.body).to.be.an('array');
-    //       expect(res.body).to.have.lengthOf(1);
-    //       expect(includesjonSnow).to.be.true;
-    //     });
-    // });
+          const includesSecondNote = some(res.body, secondNote);
+
+          expect(res.body).to.be.an('array');
+          expect(res.body).to.have.lengthOf(1);
+          expect(includesSecondNote).to.be.true;
+        });
+    });
 
     // it('should filter users', () => {
     //   return request(app)
