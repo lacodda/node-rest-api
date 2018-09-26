@@ -26,12 +26,22 @@ exports.load = async (req, res, next, id) => {
 
 /**
  * Get note
+ *
  * @public
  *
  * @param {*} req
  * @param {*} res
+ * @param {*} next
  */
-exports.get = (req, res) => res.json(req.locals.note.transform());
+exports.get = async (req, res, next) => {
+  try {
+    const query = { id: req.params.id, userId: req.user._id };
+    const note = await Note.getOne(query);
+    res.json(note.transform());
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * Create new note

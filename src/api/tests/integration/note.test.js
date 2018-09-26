@@ -131,6 +131,7 @@ describe('Notes API', () => {
   });
 
   describe('GET /v1/notes', () => {
+    // TODO: each user can see only own notes
     it('should get all notes created by admin', () => {
       return request(app)
         .get('/v1/notes')
@@ -183,8 +184,6 @@ describe('Notes API', () => {
         })
         .expect(httpStatus.OK)
         .then(async res => {
-          console.log('RES', res.body);
-
           const secondNote = await format(dbNotes.secondNote);
 
           // before comparing it is necessary to convert String to Date
@@ -198,34 +197,73 @@ describe('Notes API', () => {
         });
     });
 
-    // it("should report error when pagination's parameters are not a number", () => {
+    it("should report error when pagination's parameters are not a number", () => {
+      return request(app)
+        .get('/v1/notes')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .query({ page: '?', perPage: 'whaat' })
+        .expect(httpStatus.BAD_REQUEST)
+        .then(res => {
+          const { field } = res.body.errors[0];
+          const { location } = res.body.errors[0];
+          const { messages } = res.body.errors[0];
+          expect(field).to.be.equal('page');
+          expect(location).to.be.equal('query');
+          expect(messages).to.include('"page" must be a number');
+          return Promise.resolve(res);
+        })
+        .then(res => {
+          const { field } = res.body.errors[1];
+          const { location } = res.body.errors[1];
+          const { messages } = res.body.errors[1];
+          expect(field).to.be.equal('perPage');
+          expect(location).to.be.equal('query');
+          expect(messages).to.include('"perPage" must be a number');
+        });
+    });
+  });
+
+  describe('GET /v1/notes/:id', () => {
+    it('should get note', async () => {
+      const id = (await Note.findOne({}))._id;
+      return request(app)
+        .get(`/v1/notes/${id}`)
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .expect(httpStatus.OK)
+        .then(res => {
+          console.log('BODY0', res.body);
+
+          expect(res.body).to.include(dbNotes.firstNote);
+        });
+    });
+
+    // it('should report error "Note does not exist" when user does not exists', () => {
     //   return request(app)
-    //     .get('/v1/notes')
+    //     .get('/v1/notes/56c787ccc67fc16ccc1a5e92')
     //     .set('Authorization', `Bearer ${adminAccessToken}`)
-    //     .query({ page: '?', perPage: 'whaat' })
-    //     .expect(httpStatus.BAD_REQUEST)
+    //     .expect(httpStatus.NOT_FOUND)
     //     .then(res => {
-    //       const { field } = res.body.errors[0];
-    //       const { location } = res.body.errors[0];
-    //       const { messages } = res.body.errors[0];
-    //       expect(field).to.be.equal('page');
-    //       expect(location).to.be.equal('query');
-    //       expect(messages).to.include('"page" must be a number');
-    //       return Promise.resolve(res);
-    //     })
-    //     .then(res => {
-    //       const { field } = res.body.errors[1];
-    //       const { location } = res.body.errors[1];
-    //       const { messages } = res.body.errors[1];
-    //       expect(field).to.be.equal('perPage');
-    //       expect(location).to.be.equal('query');
-    //       expect(messages).to.include('"perPage" must be a number');
+    //       expect(res.body.code).to.be.equal(404);
+    //       expect(res.body.message).to.be.equal('Note does not exist');
     //     });
     // });
 
-    // it('should report error if logged user is not an admin', () => {
+    // it('should report error "Note does not exist" when id is not a valid ObjectID', () => {
     //   return request(app)
-    //     .get('/v1/notes')
+    //     .get('/v1/notes/palmeiras1914')
+    //     .set('Authorization', `Bearer ${adminAccessToken}`)
+    //     .expect(httpStatus.NOT_FOUND)
+    //     .then(res => {
+    //       expect(res.body.code).to.be.equal(404);
+    //       expect(res.body.message).to.equal('Note does not exist');
+    //     });
+    // });
+
+    // it('should report error when logged user is not the same as the requested one', async () => {
+    //   const id = (await Note.findOne({ email: dbUsers.branStark.email }))._id;
+
+    //   return request(app)
+    //     .get(`/v1/notes/${id}`)
     //     .set('Authorization', `Bearer ${userAccessToken}`)
     //     .expect(httpStatus.FORBIDDEN)
     //     .then(res => {
@@ -234,56 +272,6 @@ describe('Notes API', () => {
     //     });
     // });
   });
-
-  /*   describe('GET /v1/notes/:userId', () => {
-    it('should get user', async () => {
-      const id = (await Note.findOne({}))._id;
-      delete dbUsers.branStark.password;
-
-      return request(app)
-        .get(`/v1/notes/${id}`)
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .expect(httpStatus.OK)
-        .then(res => {
-          expect(res.body).to.include(dbUsers.branStark);
-        });
-    });
-
-    it('should report error "Note does not exist" when user does not exists', () => {
-      return request(app)
-        .get('/v1/notes/56c787ccc67fc16ccc1a5e92')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .expect(httpStatus.NOT_FOUND)
-        .then(res => {
-          expect(res.body.code).to.be.equal(404);
-          expect(res.body.message).to.be.equal('Note does not exist');
-        });
-    });
-
-    it('should report error "Note does not exist" when id is not a valid ObjectID', () => {
-      return request(app)
-        .get('/v1/notes/palmeiras1914')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .expect(httpStatus.NOT_FOUND)
-        .then(res => {
-          expect(res.body.code).to.be.equal(404);
-          expect(res.body.message).to.equal('Note does not exist');
-        });
-    });
-
-    it('should report error when logged user is not the same as the requested one', async () => {
-      const id = (await Note.findOne({ email: dbUsers.branStark.email }))._id;
-
-      return request(app)
-        .get(`/v1/notes/${id}`)
-        .set('Authorization', `Bearer ${userAccessToken}`)
-        .expect(httpStatus.FORBIDDEN)
-        .then(res => {
-          expect(res.body.code).to.be.equal(httpStatus.FORBIDDEN);
-          expect(res.body.message).to.be.equal('Forbidden');
-        });
-    });
-  }); */
 
   /*   describe('PUT /v1/notes/:userId', () => {
     it('should replace user', async () => {

@@ -98,6 +98,32 @@ noteSchema.statics = {
   },
 
   /**
+   * Get note by id and userId
+   *
+   * @param {*} { id, userId }
+   * @returns {Promise<Note>}
+   */
+  async getOne({ id, userId }) {
+    try {
+      let note;
+
+      if (Types.ObjectId.isValid(id)) {
+        note = await this.findOne({ _id: id, userId }).exec();
+      }
+      if (note) {
+        return note;
+      }
+
+      throw new APIError({
+        message: 'Note does not exist',
+        status: httpStatus.NOT_FOUND,
+      });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
    * List notes in descending order of 'createdAt' timestamp.
    *
    * @param {number} skip - Number of notes to be skipped.
