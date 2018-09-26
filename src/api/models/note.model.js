@@ -2,12 +2,18 @@ const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const { omitBy, isNil } = require('lodash');
 const APIError = require('../utils/APIError');
+const { convertToRegex } = require('../utils/mongoose');
 
 const { Schema, Types } = mongoose;
 /**
- * Note Roles
+ * Note Types
  */
 const type = ['note', 'link'];
+
+/**
+ * Fields on which the search by regular expressions works.
+ */
+const regexSearch = ['name', 'content'];
 
 /**
  * Note Schema
@@ -100,8 +106,9 @@ noteSchema.statics = {
    */
   list({ page = 1, perPage = 5, userId, name, content, type }) {
     const options = omitBy({ userId, name, content, type }, isNil);
+    const regex = convertToRegex(regexSearch, options);
 
-    return this.find(options)
+    return this.find({ ...options, ...regex })
       .sort({ createdAt: -1 })
       .skip(perPage * (page - 1))
       .limit(perPage)

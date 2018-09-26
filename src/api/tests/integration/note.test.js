@@ -5,7 +5,7 @@ const httpStatus = require('http-status');
 const { expect } = require('chai');
 // const sinon = require('sinon');
 const bcrypt = require('bcryptjs');
-const { some, omitBy, isNil, isEqual } = require('lodash');
+const { some, omitBy, isNil, isEqual, first } = require('lodash');
 const app = require('../../../index');
 const User = require('../../models/user.model');
 const Note = require('../../models/note.model');
@@ -174,25 +174,29 @@ describe('Notes API', () => {
         });
     });
 
-    // it('should filter users', () => {
-    //   return request(app)
-    //     .get('/v1/notes')
-    //     .set('Authorization', `Bearer ${adminAccessToken}`)
-    //     .query({ email: dbUsers.jonSnow.email })
-    //     .expect(httpStatus.OK)
-    //     .then(res => {
-    //       delete dbUsers.jonSnow.password;
-    //       const john = format(dbUsers.jonSnow);
-    //       const includesjonSnow = some(res.body, john);
+    it('should filter notes by regular expression in name field', () => {
+      return request(app)
+        .get('/v1/notes')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .query({
+          name: first(dbNotes.secondNote.name.split(' ')).toLowerCase(),
+        })
+        .expect(httpStatus.OK)
+        .then(async res => {
+          console.log('RES', res.body);
 
-    //       // before comparing it is necessary to convert String to Date
-    //       res.body[0].createdAt = new Date(res.body[0].createdAt);
+          const secondNote = await format(dbNotes.secondNote);
 
-    //       expect(res.body).to.be.an('array');
-    //       expect(res.body).to.have.lengthOf(1);
-    //       expect(includesjonSnow).to.be.true;
-    //     });
-    // });
+          // before comparing it is necessary to convert String to Date
+          res.body[0].createdAt = new Date(res.body[0].createdAt);
+
+          const includesSecondNote = some(res.body, secondNote);
+
+          expect(res.body).to.be.an('array');
+          expect(res.body).to.have.lengthOf(1);
+          expect(includesSecondNote).to.be.true;
+        });
+    });
 
     // it("should report error when pagination's parameters are not a number", () => {
     //   return request(app)
