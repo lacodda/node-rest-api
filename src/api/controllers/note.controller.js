@@ -74,14 +74,21 @@ exports.create = async (req, res, next) => {
  */
 exports.replace = async (req, res, next) => {
   try {
-    const { note } = req.locals;
+    const note = await Note.findById(req.params.id);
+
+    if (!note || !note.userId.equals(req.user._id)) {
+      throw new APIError({
+        status: httpStatus.NOT_FOUND, // TODO: put 404 msg to single place
+        message: 'Note does not exist',
+      });
+    }
+
     const newNote = new Note(req.body);
-    const ommitRole = note.role !== 'admin' ? 'role' : '';
-    const newNoteObject = omit(newNote.toObject(), '_id', ommitRole);
+    newNote.userId = req.user._id;
+    const newNoteObject = omit(newNote.toObject(), '_id');
 
     await note.update(newNoteObject, { override: true, upsert: true });
     const savedNote = await Note.findById(note._id);
-
     res.json(savedNote.transform());
   } catch (error) {
     next(error);
