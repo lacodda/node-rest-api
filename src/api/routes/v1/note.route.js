@@ -11,11 +11,6 @@ const {
 
 const router = express.Router();
 
-/**
- * Load note when API with noteId route parameter is hit
- */
-// router.param('noteId', controller.load);
-
 router
   .route('/')
   /**
@@ -88,7 +83,7 @@ router
    * @apiError (Forbidden 403)    Forbidden    Only data owner or admins can access the data
    * @apiError (Not Found 404)    NotFound     Note does not exist
    */
-  .get(authorize(LOGGED), controller.get)
+  .get(authorize(LOGGED), controller.load, controller.get)
   /**
    * @api {put} v1/notes/:id Replace Note
    * @apiDescription Replace the whole note document with a new one
@@ -114,7 +109,12 @@ router
    * @apiError (Forbidden 403)    Forbidden        Only data owner or admins can modify the data
    * @apiError (Not Found 404)    NotFound         Note does not exist
    */
-  .put(authorize(LOGGED), validate(replaceNote), controller.replace)
+  .put(
+    authorize(LOGGED),
+    validate(replaceNote),
+    controller.load,
+    controller.replace,
+  )
   /**
    * @api {patch} v1/notes/:id Update Note
    * @apiDescription Update some fields of a note document
@@ -140,7 +140,12 @@ router
    * @apiError (Forbidden 403)    Forbidden        Only data owner or admins can modify the data
    * @apiError (Not Found 404)    NotFound         Note does not exist
    */
-  .patch(authorize(LOGGED), validate(updateNote), controller.update)
+  .patch(
+    authorize(LOGGED),
+    validate(updateNote),
+    controller.load,
+    controller.update,
+  )
   /**
    * @api {patch} v1/notes/:id Delete Note
    * @apiDescription Delete a note
@@ -157,6 +162,6 @@ router
    * @apiError (Forbidden 403)    Forbidden     Only data owner or admins can delete the data
    * @apiError (Not Found 404)    NotFound      Note does not exist
    */
-  .delete(authorize(LOGGED), controller.remove);
+  .delete(authorize(LOGGED), controller.load, controller.remove);
 
 module.exports = router;

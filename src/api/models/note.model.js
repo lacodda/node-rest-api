@@ -103,7 +103,7 @@ noteSchema.statics = {
    * @param {*} { id, userId }
    * @returns {Promise<Note>}
    */
-  async getOne({ id, userId }) {
+  async getOne(id, userId) {
     try {
       let note;
 

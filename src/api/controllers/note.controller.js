@@ -2,7 +2,6 @@ const httpStatus = require('http-status');
 const { omit } = require('lodash');
 const Note = require('../models/note.model');
 const { handler: errorHandler } = require('../middlewares/error');
-const APIError = require('../utils/APIError');
 
 /**
  * Load note and append to req.
@@ -11,12 +10,12 @@ const APIError = require('../utils/APIError');
  * @param {*} req
  * @param {*} res
  * @param {*} next
- * @param {*} id
  * @returns
  */
-exports.load = async (req, res, next, id) => {
+exports.load = async (req, res, next) => {
   try {
-    const note = await Note.get(id);
+    // const note = await Note.get(req.params.id);
+    const note = await Note.getOne(req.params.id, req.user._id);
     req.locals = { note };
     return next();
   } catch (error) {
@@ -31,17 +30,8 @@ exports.load = async (req, res, next, id) => {
  *
  * @param {*} req
  * @param {*} res
- * @param {*} next
  */
-exports.get = async (req, res, next) => {
-  try {
-    const query = { id: req.params.id, userId: req.user._id };
-    const note = await Note.getOne(query);
-    res.json(note.transform());
-  } catch (error) {
-    next(error);
-  }
-};
+exports.get = (req, res) => res.json(req.locals.note.transform());
 
 /**
  * Create new note
@@ -74,14 +64,7 @@ exports.create = async (req, res, next) => {
  */
 exports.replace = async (req, res, next) => {
   try {
-    const note = await Note.findById(req.params.id);
-
-    if (!note || !note.userId.equals(req.user._id)) {
-      throw new APIError({
-        status: httpStatus.NOT_FOUND, // TODO: put 404 msg to single place
-        message: 'Note does not exist',
-      });
-    }
+    const { note } = req.locals;
 
     const newNote = new Note(req.body);
     newNote.userId = req.user._id;
@@ -106,13 +89,8 @@ exports.replace = async (req, res, next) => {
  */
 exports.update = async (req, res, next) => {
   try {
-    const note = await Note.findById(req.params.id);
+    const { note } = req.locals;
 
-    if (!note || !note.userId.equals(req.user._id)) {
-      throw new APIError({
-        status: httpStatus.NOT_FOUND,
-      });
-    }
     note.setFromObject(req.body);
     const updatedNote = await note.save();
 

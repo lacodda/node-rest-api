@@ -5,11 +5,10 @@ const httpStatus = require('http-status');
 const { expect } = require('chai');
 // const sinon = require('sinon');
 const bcrypt = require('bcryptjs');
-const { some, omitBy, isNil, isEqual, first } = require('lodash');
+const { some, omitBy, isNil, first } = require('lodash');
 const app = require('../../../index');
 const User = require('../../models/user.model');
 const Note = require('../../models/note.model');
-// const JWT_EXPIRATION = require('../../../config/vars').jwtExpirationInterval;
 
 /**
  * root level hooks
@@ -224,7 +223,6 @@ describe('Notes API', () => {
   });
 
   describe('GET /v1/notes/:id', () => {
-    // TODO: forbid show note to not owner user
     it('should get note', async () => {
       const id = (await Note.findOne({}))._id;
       return request(app)
@@ -255,6 +253,20 @@ describe('Notes API', () => {
         .then(res => {
           expect(res.body.code).to.be.equal(404);
           expect(res.body.message).to.equal('Note does not exist');
+        });
+    });
+
+    // TODO: Must be FORBIDDEN
+    it('should report error when logged user is not the requested note owner', async () => {
+      const id = (await Note.findOne({}))._id;
+
+      return request(app)
+        .get(`/v1/notes/${id}`)
+        .set('Authorization', `Bearer ${userAccessToken}`)
+        .expect(httpStatus.NOT_FOUND)
+        .then(res => {
+          expect(res.body.code).to.be.equal(404);
+          expect(res.body.message).to.be.equal('Note does not exist');
         });
     });
   });
@@ -305,19 +317,20 @@ describe('Notes API', () => {
         });
     });
 
-    // it('should report error when logged user is not the same as the requested one', async () => {
-    //   const id = (await Note.findOne({}))._id;
+    // TODO: Must be FORBIDDEN
+    it('should report error when logged user is not the requested note owner', async () => {
+      const id = (await Note.findOne({}))._id;
 
-    //   return request(app)
-    //     .put(`/v1/notes/${id}`)
-    //     .set('Authorization', `Bearer ${userAccessToken}`)
-    //     .send(note)
-    //     .expect(httpStatus.FORBIDDEN)
-    //     .then(res => {
-    //       expect(res.body.code).to.be.equal(httpStatus.FORBIDDEN);
-    //       expect(res.body.message).to.be.equal('Forbidden');
-    //     });
-    // });
+      return request(app)
+        .put(`/v1/notes/${id}`)
+        .set('Authorization', `Bearer ${userAccessToken}`)
+        .send(note)
+        .expect(httpStatus.NOT_FOUND)
+        .then(res => {
+          expect(res.body.code).to.be.equal(404);
+          expect(res.body.message).to.be.equal('Note does not exist');
+        });
+    });
   });
 
   describe('PATCH /v1/notes/:id', () => {
@@ -336,77 +349,22 @@ describe('Notes API', () => {
         });
     });
 
-    // it('should not update user when no parameters were given', async () => {
-    //   delete dbUsers.branStark.password;
-    //   const id = (await Note.findOne(dbUsers.branStark))._id;
-
-    //   return request(app)
-    //     .patch(`/v1/notes/${id}`)
-    //     .set('Authorization', `Bearer ${adminAccessToken}`)
-    //     .send()
-    //     .expect(httpStatus.OK)
-    //     .then(res => {
-    //       expect(res.body).to.include(dbUsers.branStark);
-    //     });
-    // });
-
-    // it('should report error "Note does not exist" when user does not exists', () => {
-    //   return request(app)
-    //     .patch('/v1/notes/palmeiras1914')
-    //     .set('Authorization', `Bearer ${adminAccessToken}`)
-    //     .expect(httpStatus.NOT_FOUND)
-    //     .then(res => {
-    //       expect(res.body.code).to.be.equal(404);
-    //       expect(res.body.message).to.be.equal('Note does not exist');
-    //     });
-    // });
-
-    // it('should report error when logged user is not the same as the requested one', async () => {
-    //   const id = (await Note.findOne({ email: dbUsers.branStark.email }))._id;
-
-    //   return request(app)
-    //     .patch(`/v1/notes/${id}`)
-    //     .set('Authorization', `Bearer ${userAccessToken}`)
-    //     .expect(httpStatus.FORBIDDEN)
-    //     .then(res => {
-    //       expect(res.body.code).to.be.equal(httpStatus.FORBIDDEN);
-    //       expect(res.body.message).to.be.equal('Forbidden');
-    //     });
-    // });
-
-    // it('should not update the role of the user (not admin)', async () => {
-    //   const id = (await Note.findOne({ email: dbUsers.jonSnow.email }))._id;
-    //   const role = 'admin';
-
-    //   return request(app)
-    //     .patch(`/v1/notes/${id}`)
-    //     .set('Authorization', `Bearer ${userAccessToken}`)
-    //     .send({ role })
-    //     .expect(httpStatus.OK)
-    //     .then(res => {
-    //       expect(res.body.role).to.not.be.equal(role);
-    //     });
-    // });
-  });
-
-  /*   describe('DELETE /v1/notes', () => {
-    it('should delete user', async () => {
-      const id = (await Note.findOne({}))._id;
+    it('should not update note when no parameters were given', async () => {
+      const id = (await Note.findOne(dbNotes.secondNote))._id;
 
       return request(app)
-        .delete(`/v1/notes/${id}`)
+        .patch(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
-        .expect(httpStatus.NO_CONTENT)
-        .then(() => request(app).get('/v1/notes'))
-        .then(async () => {
-          const users = await Note.find({});
-          expect(users).to.have.lengthOf(1);
+        .send()
+        .expect(httpStatus.OK)
+        .then(res => {
+          expect(res.body).to.include(dbNotes.secondNote);
         });
     });
 
-    it('should report error "Note does not exist" when user does not exists', () => {
+    it('should report error "Note does not exist" when note does not exists', () => {
       return request(app)
-        .delete('/v1/notes/palmeiras1914')
+        .patch('/v1/notes/56c787ccc67fc16ccc1a5e92')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then(res => {
@@ -415,52 +373,59 @@ describe('Notes API', () => {
         });
     });
 
-    it('should report error when logged user is not the same as the requested one', async () => {
-      const id = (await Note.findOne({ email: dbUsers.branStark.email }))._id;
+    // TODO: Must be FORBIDDEN
+    it('should report error when logged user is not the requested note owner', async () => {
+      const id = (await Note.findOne({}))._id;
+
+      return request(app)
+        .patch(`/v1/notes/${id}`)
+        .set('Authorization', `Bearer ${userAccessToken}`)
+        .expect(httpStatus.NOT_FOUND)
+        .then(res => {
+          expect(res.body.code).to.be.equal(404);
+          expect(res.body.message).to.be.equal('Note does not exist');
+        });
+    });
+  });
+
+  describe('DELETE /v1/notes', () => {
+    it('should delete note', async () => {
+      const id = (await Note.findOne({}))._id;
+
+      return request(app)
+        .delete(`/v1/notes/${id}`)
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .expect(httpStatus.NO_CONTENT)
+        .then(() => request(app).get('/v1/notes'))
+        .then(async () => {
+          const notes = await Note.find({});
+          expect(notes).to.have.lengthOf(1);
+        });
+    });
+
+    it('should report error "Note does not exist" when note does not exists', () => {
+      return request(app)
+        .delete('/v1/notes/56c787ccc67fc16ccc1a5e92')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .expect(httpStatus.NOT_FOUND)
+        .then(res => {
+          expect(res.body.code).to.be.equal(404);
+          expect(res.body.message).to.be.equal('Note does not exist');
+        });
+    });
+
+    // TODO: Must be FORBIDDEN
+    it('should report error when logged user is not the requested note owner', async () => {
+      const id = (await Note.findOne({}))._id;
 
       return request(app)
         .delete(`/v1/notes/${id}`)
         .set('Authorization', `Bearer ${userAccessToken}`)
-        .expect(httpStatus.FORBIDDEN)
+        .expect(httpStatus.NOT_FOUND)
         .then(res => {
-          expect(res.body.code).to.be.equal(httpStatus.FORBIDDEN);
-          expect(res.body.message).to.be.equal('Forbidden');
+          expect(res.body.code).to.be.equal(404);
+          expect(res.body.message).to.be.equal('Note does not exist');
         });
     });
-  }); */
-
-  /*   describe('GET /v1/notes/profile', () => {
-    it("should get the logged user's info", () => {
-      delete dbUsers.jonSnow.password;
-
-      return request(app)
-        .get('/v1/notes/profile')
-        .set('Authorization', `Bearer ${userAccessToken}`)
-        .expect(httpStatus.OK)
-        .then(res => {
-          expect(res.body).to.include(dbUsers.jonSnow);
-        });
-    });
-
-    it('should report error without stacktrace when accessToken is expired', async () => {
-      // fake time
-      const clock = sinon.useFakeTimers();
-      const expiredAccessToken = (await Note.findAndGenerateToken(
-        dbUsers.branStark,
-      )).accessToken;
-
-      // move clock forward by minutes set in config + 1 minute
-      clock.tick(JWT_EXPIRATION * 60000 + 60000);
-
-      return request(app)
-        .get('/v1/notes/profile')
-        .set('Authorization', `Bearer ${expiredAccessToken}`)
-        .expect(httpStatus.UNAUTHORIZED)
-        .then(res => {
-          expect(res.body.code).to.be.equal(httpStatus.UNAUTHORIZED);
-          expect(res.body.message).to.be.equal('jwt expired');
-          expect(res.body).to.not.have.a.property('stack');
-        });
-    });
-  }); */
+  });
 });
