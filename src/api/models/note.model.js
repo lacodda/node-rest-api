@@ -3,6 +3,7 @@ const httpStatus = require('http-status');
 const { omitBy, isNil } = require('lodash');
 const APIError = require('../utils/APIError');
 const { convertToRegex } = require('../utils/mongoose');
+const Tag = require('./tag.model');
 
 const { Schema, Types } = mongoose;
 /**
@@ -39,6 +40,12 @@ const noteSchema = new Schema(
       index: true,
       trim: true,
     },
+    tags: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Tag',
+      },
+    ],
   },
   {
     timestamps: true,
