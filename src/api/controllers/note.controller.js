@@ -1,6 +1,7 @@
 const httpStatus = require('http-status');
 const { omit } = require('lodash');
 const Note = require('../models/note.model');
+const Tag = require('../models/tag.model');
 const { handler: errorHandler } = require('../middlewares/error');
 
 /**
@@ -43,6 +44,7 @@ exports.get = (req, res) => res.json(req.locals.note.transform());
  */
 exports.create = async (req, res, next) => {
   try {
+    req.body.tags = await Tag.saveAll(req.body.tags, req.user._id);
     const note = new Note(req.body);
     note.userId = req.user._id;
     const savedNote = await note.save();

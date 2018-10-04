@@ -43,11 +43,12 @@ router
    * @apiGroup Note
    * @apiPermission logged user
    *
-   * @apiHeader {String} Athorization  Note's access token
+   * @apiHeader {String} Athorization  User's access token
    *
    * @apiParam  {String}             content   Note's content
    * @apiParam  {String{..256}}      [name]    Note's name
    * @apiParam  {String=note,link}   [type]    Note's type
+   * @apiParam  {Array[String]}      [tags]    Note's tags
    *
    * @apiSuccess (Created 201) {String}  id         Note's id
    * @apiSuccess (Created 201) {String}  name       Note's name

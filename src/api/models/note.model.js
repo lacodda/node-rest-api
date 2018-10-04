@@ -3,7 +3,7 @@ const httpStatus = require('http-status');
 const { omitBy, isNil } = require('lodash');
 const APIError = require('../utils/APIError');
 const { convertToRegex } = require('../utils/mongoose');
-const Tag = require('./tag.model');
+// const Tag = require('./tag.model');
 
 const { Schema, Types } = mongoose;
 /**
