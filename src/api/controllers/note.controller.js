@@ -32,7 +32,7 @@ exports.load = async (req, res, next) => {
  * @param {*} req
  * @param {*} res
  */
-exports.get = (req, res) => res.json(req.locals.note.transform());
+exports.get = async (req, res) => res.json(await req.locals.note.transform());
 
 /**
  * Create new note
@@ -44,12 +44,15 @@ exports.get = (req, res) => res.json(req.locals.note.transform());
  */
 exports.create = async (req, res, next) => {
   try {
-    req.body.tags = await Tag.saveAll(req.body.tags, req.user._id);
+    if (req.body.tags) {
+      req.body.tags = await Tag.saveAll(req.body.tags, req.user._id);
+    }
+
     const note = new Note(req.body);
     note.userId = req.user._id;
     const savedNote = await note.save();
     res.status(httpStatus.CREATED);
-    res.json(savedNote.transform());
+    res.json(await savedNote.transform());
   } catch (error) {
     next(error);
     // next(Note.checkDuplicateEmail(error));
@@ -74,7 +77,7 @@ exports.replace = async (req, res, next) => {
 
     await note.update(newNoteObject, { override: true, upsert: true });
     const savedNote = await Note.findById(note._id);
-    res.json(savedNote.transform());
+    res.json(await savedNote.transform());
   } catch (error) {
     next(error);
     // next(Note.checkDuplicateEmail(error));
@@ -96,7 +99,7 @@ exports.update = async (req, res, next) => {
     note.setFromObject(req.body);
     const updatedNote = await note.save();
 
-    res.json(updatedNote.transform());
+    res.json(await updatedNote.transform());
   } catch (error) {
     next(error);
     // next(Note.checkDuplicateEmail(error));
@@ -115,8 +118,8 @@ exports.list = async (req, res, next) => {
   try {
     const query = { ...req.query, userId: req.user._id };
     const notes = await Note.list(query);
-    const transformedNotes = notes.map(note => note.transform());
-    res.json(transformedNotes);
+    const transformedNotes = Promise.all(notes.map(note => note.transform()));
+    res.json(await transformedNotes);
   } catch (error) {
     next(error);
   }

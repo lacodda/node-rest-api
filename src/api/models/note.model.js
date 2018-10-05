@@ -3,7 +3,7 @@ const httpStatus = require('http-status');
 const { omitBy, isNil } = require('lodash');
 const APIError = require('../utils/APIError');
 const { convertToRegex } = require('../utils/mongoose');
-// const Tag = require('./tag.model');
+const Tag = require('./tag.model');
 
 const { Schema, Types } = mongoose;
 /**
@@ -56,9 +56,19 @@ const noteSchema = new Schema(
  * Methods
  */
 noteSchema.method({
-  transform() {
+  async transform() {
     const transformed = {};
-    const fields = ['id', 'name', 'type', 'content', 'createdAt'];
+    const fields = [
+      'id',
+      'name',
+      'type',
+      'content',
+      'tags',
+      'createdAt',
+      'updatedAt',
+    ];
+
+    await this.populate('tags').execPopulate();
 
     fields.forEach(field => {
       transformed[field] = this[field];
@@ -152,4 +162,4 @@ noteSchema.statics = {
 /**
  * @typedef Note
  */
-module.exports = mongoose.model('note', noteSchema);
+module.exports = mongoose.model('Note', noteSchema);

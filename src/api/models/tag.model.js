@@ -41,8 +41,16 @@ tagSchema.statics = {
     try {
       return Promise.all(
         tagsArray.map(async name => {
-          const tag = new this({ name, userId });
-          const savedTag = await tag.save();
+          const query = { name };
+          const update = { name, userId };
+          const options = {
+            upsert: true,
+            new: true,
+            setDefaultsOnInsert: true,
+          };
+
+          // Find the document
+          const savedTag = await this.findOneAndUpdate(query, update, options);
 
           return savedTag._id;
         }),
@@ -56,4 +64,4 @@ tagSchema.statics = {
 /**
  * @typedef tag
  */
-module.exports = mongoose.model('tag', tagSchema);
+module.exports = mongoose.model('Tag', tagSchema);
