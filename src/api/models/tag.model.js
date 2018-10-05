@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
+const httpStatus = require('http-status');
+const { omitBy, isNil } = require('lodash');
+const APIError = require('../utils/APIError');
 
-const { Schema } = mongoose;
+const { Schema, Types } = mongoose;
 
 /**
  * Tag Schema
@@ -18,6 +21,8 @@ const tagSchema = new Schema(
     },
     color: {
       type: String,
+      maxlength: 15,
+      default: 'gray',
       trim: true,
     },
   },
@@ -27,6 +32,22 @@ const tagSchema = new Schema(
 );
 
 /**
+ * Methods
+ */
+tagSchema.method({
+  async transform() {
+    const transformed = {};
+    const fields = ['id', 'name', 'color', 'createdAt', 'updatedAt'];
+
+    fields.forEach(field => {
+      transformed[field] = this[field];
+    });
+
+    return transformed;
+  },
+});
+
+/**
  * Statics
  */
 tagSchema.statics = {
@@ -34,7 +55,7 @@ tagSchema.statics = {
    * Save all tags
    *
    * @param {Array} tagsArray - array of tags
-   * @param {string} userId - The User Id.
+   * @param {String} userId - The User Id.
    * @returns {Promise<Array[TagId], APIError>}
    */
   async saveAll(tagsArray, userId) {
@@ -58,6 +79,49 @@ tagSchema.statics = {
     } catch (error) {
       throw error;
     }
+  },
+
+  /**
+   * Get tag by id and userId
+   *
+   * @param {ObjectId} id       The objectId of Tag
+   * @param {ObjectId} userId   The objectId of User
+   * @returns {Promise<Tag>}
+   */
+  async getOne(id, userId) {
+    try {
+      let tag;
+
+      if (Types.ObjectId.isValid(id)) {
+        tag = await this.findOne({ _id: id, userId }).exec();
+      }
+      if (tag) {
+        return tag;
+      }
+
+      throw new APIError({
+        message: 'Tag does not exist',
+        status: httpStatus.NOT_FOUND,
+      });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * List tags in descending order of 'createdAt' timestamp.
+   *
+   * @param {number} skip     Number of tags to be skipped.
+   * @param {number} limit    Limit number of tags to be returned.
+   * @returns {Promise<Tag[]>}
+   */
+  list({ page = 1, perPage = 5, userId, name, color }) {
+    const options = omitBy({ userId, name, color }, isNil);
+    return this.find(options)
+      .sort({ createdAt: -1 })
+      .skip(perPage * (page - 1))
+      .limit(perPage)
+      .exec();
   },
 };
 

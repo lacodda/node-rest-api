@@ -2,6 +2,7 @@ const express = require('express');
 const userRoutes = require('./user.route');
 const authRoutes = require('./auth.route');
 const noteRoutes = require('./note.route');
+const tagRoutes = require('./tag.route');
 
 const router = express.Router();
 
@@ -22,5 +23,10 @@ router.use('/auth', authRoutes);
  * GET/POST/PUT/DELETE v1/notes
  */
 router.use('/notes', noteRoutes);
+
+/**
+ * GET/POST/PUT/DELETE v1/tags
+ */
+router.use('/tags', tagRoutes);
 
 module.exports = router;

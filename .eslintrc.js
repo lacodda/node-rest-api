@@ -33,7 +33,7 @@ module.exports = {
         objects: 'always-multiline',
         imports: 'always-multiline',
         exports: 'always-multiline',
-        functions: 'never',
+        functions: 'always-multiline',
       },
     ],
     indent: 'off',

@@ -48,13 +48,15 @@ router
    * @apiParam  {String}             content   Note's content
    * @apiParam  {String{..256}}      [name]    Note's name
    * @apiParam  {String=note,link}   [type]    Note's type
-   * @apiParam  {Array[String]}      [tags]    Note's tags
+   * @apiParam  {String[]}           [tags]    Note's tags
    *
-   * @apiSuccess (Created 201) {String}  id         Note's id
-   * @apiSuccess (Created 201) {String}  name       Note's name
-   * @apiSuccess (Created 201) {String}  content    Note's content
-   * @apiSuccess (Created 201) {String}  type       Note's type
-   * @apiSuccess (Created 201) {Date}    createdAt  Timestamp
+   * @apiSuccess (Created 201) {String}   id          Note's id
+   * @apiSuccess (Created 201) {String}   name        Note's name
+   * @apiSuccess (Created 201) {String}   content     Note's content
+   * @apiSuccess (Created 201) {String}   type        Note's type
+   * @apiSuccess (Created 201) {Object[]} tags        List of tags
+   * @apiSuccess (Created 201) {Date}     createdAt   Timestamp
+   * @apiSuccess (Created 201) {Date}     updatedAt   Timestamp
    *
    * @apiError (Bad Request 400)   ValidationError  Some parameters may contain invalid values
    * @apiError (Unauthorized 401)  Unauthorized     Only authenticated users can create the data
@@ -74,11 +76,13 @@ router
    *
    * @apiHeader {String} Athorization  User's access token
    *
-   * @apiSuccess {String}  id         Note's id
-   * @apiSuccess {String}  name       Note's name
-   * @apiSuccess {String}  content    Note's content
-   * @apiSuccess {String}  type       Note's type
-   * @apiSuccess {Date}    createdAt  Timestamp
+   * @apiSuccess {String}   id          Note's id
+   * @apiSuccess {String}   name        Note's name
+   * @apiSuccess {String}   content     Note's content
+   * @apiSuccess {String}   type        Note's type
+   * @apiSuccess {Object[]} tags        List of tags
+   * @apiSuccess {Date}     createdAt   Timestamp
+   * @apiSuccess {Date}     updatedAt   Timestamp
    *
    * @apiError (Unauthorized 401) Unauthorized Only authenticated users can access the data
    * @apiError (Forbidden 403)    Forbidden    Only data owner or admins can access the data
@@ -98,12 +102,15 @@ router
    * @apiParam  {String}             content   Note's content
    * @apiParam  {String{..256}}      [name]    Note's name
    * @apiParam  {String=note,link}   [type]    Note's type
+   * @apiParam  {String[]}           [tags]    Note's tags
    *
-   * @apiSuccess {String}  id         Note's id
-   * @apiSuccess {String}  name       Note's name
-   * @apiSuccess {String}  content    Note's content
-   * @apiSuccess {String}  type       Note's type
-   * @apiSuccess {Date}    createdAt  Timestamp
+   * @apiSuccess {String}   id          Note's id
+   * @apiSuccess {String}   name        Note's name
+   * @apiSuccess {String}   content     Note's content
+   * @apiSuccess {String}   type        Note's type
+   * @apiSuccess {Object[]} tags        List of tags
+   * @apiSuccess {Date}     createdAt   Timestamp
+   * @apiSuccess {Date}     updatedAt   Timestamp
    *
    * @apiError (Bad Request 400)  ValidationError  Some parameters may contain invalid values
    * @apiError (Unauthorized 401) Unauthorized     Only authenticated users can modify the data
@@ -129,12 +136,15 @@ router
    * @apiParam  {String}             content   Note's content
    * @apiParam  {String{..256}}      [name]    Note's name
    * @apiParam  {String=note,link}   [type]    Note's type
+   * @apiParam  {String[]}           [tags]    Note's tags
    *
-   * @apiSuccess {String}  id         Note's id
-   * @apiSuccess {String}  name       Note's name
-   * @apiSuccess {String}  content    Note's content
-   * @apiSuccess {String}  type       Note's type
-   * @apiSuccess {Date}    createdAt  Timestamp
+   * @apiSuccess {String}   id          Note's id
+   * @apiSuccess {String}   name        Note's name
+   * @apiSuccess {String}   content     Note's content
+   * @apiSuccess {String}   type        Note's type
+   * @apiSuccess {Object[]} tags        List of tags
+   * @apiSuccess {Date}     createdAt   Timestamp
+   * @apiSuccess {Date}     updatedAt   Timestamp
    *
    * @apiError (Bad Request 400)  ValidationError  Some parameters may contain invalid values
    * @apiError (Unauthorized 401) Unauthorized     Only authenticated users can modify the data
@@ -148,7 +158,7 @@ router
     controller.update,
   )
   /**
-   * @api {patch} v1/notes/:id Delete Note
+   * @api {delete} v1/notes/:id Delete Note
    * @apiDescription Delete a note
    * @apiVersion 1.0.0
    * @apiName DeleteNote

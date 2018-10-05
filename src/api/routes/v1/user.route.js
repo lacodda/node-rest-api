@@ -169,7 +169,7 @@ router
    */
   .patch(authorize(LOGGED_USER), validate(updateUser), controller.update)
   /**
-   * @api {patch} v1/users/:id Delete User
+   * @api {delete} v1/users/:id Delete User
    * @apiDescription Delete a user
    * @apiVersion 1.0.0
    * @apiName DeleteUser

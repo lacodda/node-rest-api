@@ -31,6 +31,7 @@ module.exports = {
       content: Joi.string().required(),
       name: Joi.string().max(256),
       type: Joi.string().valid(Note.type),
+      tags: Joi.array().items(Joi.string()),
     },
     params: {
       id: Joi.string()
@@ -45,6 +46,7 @@ module.exports = {
       content: Joi.string(),
       name: Joi.string().max(256),
       type: Joi.string().valid(Note.type),
+      tags: Joi.array().items(Joi.string()),
     },
     params: {
       id: Joi.string()

@@ -91,7 +91,7 @@ noteSchema.statics = {
   /**
    * Get note
    *
-   * @param {ObjectId} id - The objectId of note.
+   * @param {ObjectId} id   The objectId of Note
    * @returns {Promise<Note, APIError>}
    */
   async get(id) {
@@ -117,7 +117,8 @@ noteSchema.statics = {
   /**
    * Get note by id and userId
    *
-   * @param {*} { id, userId }
+   * @param {ObjectId} id       The objectId of Note
+   * @param {ObjectId} userId   The objectId of User
    * @returns {Promise<Note>}
    */
   async getOne(id, userId) {
@@ -143,8 +144,8 @@ noteSchema.statics = {
   /**
    * List notes in descending order of 'createdAt' timestamp.
    *
-   * @param {number} skip - Number of notes to be skipped.
-   * @param {number} limit - Limit number of notes to be returned.
+   * @param {number} skip     Number of notes to be skipped.
+   * @param {number} limit    Limit number of notes to be returned.
    * @returns {Promise<Note[]>}
    */
   list({ page = 1, perPage = 5, userId, name, content, type }) {
