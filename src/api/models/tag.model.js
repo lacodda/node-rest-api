@@ -45,6 +45,10 @@ tagSchema.method({
 
     return transformed;
   },
+
+  setFromObject(object) {
+    Object.assign(this, object);
+  },
 });
 
 /**

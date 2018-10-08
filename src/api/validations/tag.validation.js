@@ -41,9 +41,7 @@ module.exports = {
   // PATCH /v1/tags/:id
   updateTag: {
     body: {
-      name: Joi.string()
-        .max(256)
-        .required(),
+      name: Joi.string().max(256),
       color: Joi.string().max(15),
     },
     params: {
