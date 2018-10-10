@@ -31,14 +31,24 @@ const tagSchema = new Schema(
   },
 );
 
+tagSchema.virtual('notes', {
+  ref: 'Note', // The model to use
+  localField: '_id', // Find notes where `localField`
+  foreignField: 'tags', // is equal to `foreignField`
+  // If `justOne` is true, 'members' will be a single doc as opposed to
+  // an array. `justOne` is false by default.
+  justOne: false,
+  options: { sort: { name: -1 }, limit: 5 }, // Query options, see http://bit.ly/mongoose-query-options
+});
+
 /**
  * Methods
  */
 tagSchema.method({
   async transform() {
     const transformed = {};
-    const fields = ['id', 'name', 'color', 'createdAt', 'updatedAt'];
-
+    const fields = ['id', 'name', 'color', 'createdAt', 'updatedAt', 'notes'];
+    await this.populate('notes').execPopulate();
     fields.forEach(field => {
       transformed[field] = this[field];
     });
