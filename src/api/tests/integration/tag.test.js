@@ -19,6 +19,9 @@ async function format(tag) {
   // remove null and undefined properties
   return omitBy(dbTag, isNil);
 }
+// TODO: remove setup to separate file
+// TODO: remove tag -> remove from all notes
+// TODO: delete -> isDeleted
 
 describe('Tags API', () => {
   let adminAccessToken;

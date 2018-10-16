@@ -40,6 +40,11 @@ const noteSchema = new Schema(
       index: true,
       trim: true,
     },
+    isDeleted: {
+      type: Boolean,
+      index: true,
+      default: false,
+    },
     tags: [
       {
         type: Schema.Types.ObjectId,
@@ -68,7 +73,7 @@ noteSchema.method({
       'updatedAt',
     ];
 
-    await this.populate('tags').execPopulate();
+    await this.populate({ path: 'tags', select: 'name color' }).execPopulate();
 
     fields.forEach(field => {
       transformed[field] = this[field];

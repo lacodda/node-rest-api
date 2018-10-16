@@ -25,6 +25,11 @@ const tagSchema = new Schema(
       default: 'gray',
       trim: true,
     },
+    isDeleted: {
+      type: Boolean,
+      index: true,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -48,7 +53,7 @@ tagSchema.method({
   async transform() {
     const transformed = {};
     const fields = ['id', 'name', 'color', 'createdAt', 'updatedAt', 'notes'];
-    await this.populate('notes').execPopulate();
+    await this.populate({ path: 'notes', select: 'name type' }).execPopulate();
     fields.forEach(field => {
       transformed[field] = this[field];
     });
@@ -76,7 +81,7 @@ tagSchema.statics = {
     try {
       return Promise.all(
         tagsArray.map(async name => {
-          const query = { name };
+          const query = { name, userId };
           const update = { name, userId };
           const options = {
             upsert: true,

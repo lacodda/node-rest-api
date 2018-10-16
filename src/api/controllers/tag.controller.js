@@ -42,9 +42,22 @@ exports.get = async (req, res) => res.json(await req.locals.tag.transform());
  */
 exports.create = async (req, res, next) => {
   try {
+    // TODO: combine to general method with Tag.saveAll()
     const tag = new Tag(req.body);
-    tag.userId = req.user._id;
-    const savedTag = await tag.save();
+    const { name, color, isDeleted } = tag;
+    const userId = req.user._id;
+
+    const query = { name, userId };
+    const update = { name, color, isDeleted, userId };
+    const options = {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    };
+
+    // Find the document
+    const savedTag = await Tag.findOneAndUpdate(query, update, options);
+
     res.status(httpStatus.CREATED);
     res.json(await savedTag.transform());
   } catch (error) {
