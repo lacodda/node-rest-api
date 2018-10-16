@@ -73,7 +73,11 @@ noteSchema.method({
       'updatedAt',
     ];
 
-    await this.populate({ path: 'tags', select: 'name color' }).execPopulate();
+    await this.populate({
+      path: 'tags',
+      match: { isDeleted: false },
+      select: 'name color',
+    }).execPopulate();
 
     fields.forEach(field => {
       transformed[field] = this[field];

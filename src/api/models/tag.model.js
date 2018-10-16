@@ -43,7 +43,7 @@ tagSchema.virtual('notes', {
   // If `justOne` is true, 'members' will be a single doc as opposed to
   // an array. `justOne` is false by default.
   justOne: false,
-  options: { sort: { name: -1 }, limit: 5 }, // Query options, see http://bit.ly/mongoose-query-options
+  options: { sort: { name: 1 }, limit: 5 }, // Query options, see http://bit.ly/mongoose-query-options
 });
 
 /**
@@ -53,7 +53,11 @@ tagSchema.method({
   async transform() {
     const transformed = {};
     const fields = ['id', 'name', 'color', 'createdAt', 'updatedAt', 'notes'];
-    await this.populate({ path: 'notes', select: 'name type' }).execPopulate();
+    await this.populate({
+      path: 'notes',
+      match: { isDeleted: false },
+      select: 'name type',
+    }).execPopulate();
     fields.forEach(field => {
       transformed[field] = this[field];
     });
